@@ -9,5 +9,5 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-west-1"
+  region = "eu-west-1"
 }
