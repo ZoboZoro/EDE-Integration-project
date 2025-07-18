@@ -1,15 +1,15 @@
 locals {
-    project_name = "ede_multisource_project"
-    managed_by   = "terrfaorm"
-    environment  = "development"
+    Project_Name = "ede_multisource_project"
+    Managed_by   = "terrfaorm"
+    Environment  = "development"
 }
 
 locals {
   common_tags = {
-    project_name = "ede_multisource_project"
-    managed_by   = "terrfaorm"
-    owner = "Taofeecoh"
-    github = "github.com/zobozoro"
-    environment  = "development"
+    Project_Name = "ede_multisource_project"
+    Managed_by   = "terrfaorm"
+    Owner = "Taofeecoh"
+    Github = "github.com/zobozoro"
+    Environment  = "development"
   }
 }
