@@ -4,10 +4,20 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+
+    random = {
+      source = "hashicorp/random"
+      version = "3.7.2"
+    }
   }
 }
 
-# Configure the AWS Provider
+# Configure Providers
 provider "aws" {
-  region = "eu-west-1"
+  profile = "taofeecoh"
+  region  = "eu-central-1"
+}
+
+provider "random" {
+  
 }
