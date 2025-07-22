@@ -1,7 +1,7 @@
 
 resource "aws_security_group" "sg1" {
   name        = "sg1"
-  description = "Allow TLS inbound traffic and all outbound traffic"
+  description = "Allow inbound traffic from specific ports on any network, and all outbound traffic"
   vpc_id      = aws_vpc.multisource_vpc.id
 
   tags = concat({Name = "sg1"}, local.common_tags)
@@ -17,7 +17,7 @@ resource "aws_vpc_security_group_ingress_rule" "ingress1" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ingress2" {
-  security_group_id = aws_security_group.sg1.id
+  security_group_id = "0.0.0.0/0"  #aws_security_group.sg1.id
   cidr_ipv4         = aws_vpc.multisource_vpc.cidr_block 
   from_port         = 22
   ip_protocol       = "tcp"
