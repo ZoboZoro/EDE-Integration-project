@@ -1,7 +1,7 @@
 
 resource "aws_security_group" "sg1" {
   name        = "sg1"
-  description = "Allow inbound traffic from specific ports on any network, and all outbound traffic"
+  description = "Allow inbound traffic from specific ports on any network, and all outbound traffics"
   vpc_id      = aws_vpc.multisource_vpc.id
 
   tags = concat({Name = "sg1"}, local.common_tags)
