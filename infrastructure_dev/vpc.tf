@@ -1,10 +1,10 @@
 
 # Create VPC
 resource "aws_vpc" "multisource_vpc" {
-  cidr_block       = "98.16.0.0/16"
-  instance_tenancy = "default"
+  cidr_block           = "98.16.0.0/16"
+  instance_tenancy     = "default"
   enable_dns_hostnames = true
-  owner_id = var.account_id
+  owner_id             = var.account_id
 
   tags = local.common_tags
 }
@@ -25,8 +25,8 @@ resource "aws_internet_gateway_attachment" "multisource_gw_attachment" {
 
 # Create Subnets
 resource "aws_subnet" "public_subnet1" {
-  vpc_id     = aws_vpc.multisource_vpc.id
-  cidr_block = "98.16.0.0/24"
+  vpc_id                  = aws_vpc.multisource_vpc.id
+  cidr_block              = "98.16.0.0/24"
   map_public_ip_on_launch = true
 
   tags = local.common_tags
@@ -49,15 +49,15 @@ resource "aws_route_table" "multisource_rtb" {
 }
 
 resource "aws_route" "multisource_route_toInternetgw" {
-  route_table_id            = aws_route_table.multisource_rtb.id
-  destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.multisource_gw.id
+  route_table_id         = aws_route_table.multisource_rtb.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.multisource_gw.id
 }
 
 resource "aws_route" "multisource_route_toNatgw" {
-  route_table_id            = aws_route_table.multisource_rtb.id
-  destination_cidr_block    = "98.16.1.0/24"
-  gateway_id = aws_internet_gateway.multisource_gw.id
+  route_table_id         = aws_route_table.multisource_rtb.id
+  destination_cidr_block = "98.16.1.0/24"
+  gateway_id             = aws_internet_gateway.multisource_gw.id
 }
 
 
