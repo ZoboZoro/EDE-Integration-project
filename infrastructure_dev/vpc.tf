@@ -4,7 +4,6 @@ resource "aws_vpc" "multisource_vpc" {
   cidr_block           = "98.16.0.0/16"
   instance_tenancy     = "default"
   enable_dns_hostnames = true
-  owner_id             = var.account_id
 
   tags = local.common_tags
 }
@@ -65,4 +64,15 @@ resource "aws_route" "multisource_route_toNatgw" {
 resource "aws_route_table_association" "multisource_rtb" {
   subnet_id      = aws_subnet.public_subnet1.id
   route_table_id = aws_route_table.multisource_rtb.id
+}
+
+
+# Subnet group
+resource "aws_db_subnet_group" "sunbet_g1" {
+  name       = "db_subnetgroup1"
+  subnet_ids =  [aws_subnet.public_subnet1.id, aws_subnet.private_subnet1.id]
+
+  tags = {
+    Name = "db_subnetgroup1"
+  }
 }
