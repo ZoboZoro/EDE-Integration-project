@@ -14,7 +14,7 @@ resource "aws_ssm_parameter" "secret" {
 
 resource "aws_redshift_cluster" "multisource_db" {
   cluster_identifier = "tf-multisource-warehouse"
-  database_name      = "production/4wdhealthwarehouse"
+  database_name      = "production_4wdhealth_warehouse"
   master_username    = var.master_username
   node_type          = "dc1.large"
   cluster_type       = "multi-node"
@@ -45,7 +45,7 @@ resource "aws_db_instance" "rds" {
   storage_type         = "gp2"
   engine               = "postgres"
   engine_version       = "17.4"
-  identifier           = "production/postgres1"
+  identifier           = "production-postgres1"
   instance_class       = "db.t4g.micro"
   db_name              = "production/4wdhealthdb"
   username             = var.db_username
