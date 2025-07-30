@@ -11,5 +11,6 @@ locals {
     Owner        = "Taofeecoh"
     Github       = "github.com/zobozoro"
     Environment  = "production"
+    Region       = "eu-central-1"
   }
 }
