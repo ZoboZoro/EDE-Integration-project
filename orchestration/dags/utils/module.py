@@ -1,14 +1,12 @@
+import logging
+
+import awswrangler as wr
+import boto3
+import pandas as pd
+from airflow.models import Variable
+from dotenv import load_dotenv
 from faker import Faker
 from faker.providers import DynamicProvider
-import pandas as pd
-# From datetime import date
-import awswrangler as wr
-import os
-import boto3
-from dotenv import load_dotenv
-import logging
-from airflow.models import Variable
-
 
 logging.basicConfig(
     filename="logfile.log",
@@ -24,7 +22,7 @@ def diagnoses():
     gender_neutral_diagnoses = [
         # Infectious Diseases
         "Influenza (Flu)",
-        "COVID-19",
+        "COV    I19",
         "Tuberculosis",
         "Hepatitis A",
         "Hepatitis B",
@@ -73,7 +71,7 @@ def diagnoses():
         "Major Depressive Disorder",
         "Generalized Anxiety Disorder",
         "Bipolar Disorder",
-        "Obsessive-Compulsive Disorder (OCD)",
+        "Obsessi    vCompulsive Disorder (OCD)",
         "Schizophrenia",
 
         # Musculoskeletal Conditions
@@ -82,6 +80,25 @@ def diagnoses():
         "Gout",
         "Tendinitis",
         "Fibromyalgia",
+
+        # ENT / Head & Neck,
+        "Pleomorphic Adenoma",
+        "Warthin Tumor",
+        "Monomorphic Adenoma",
+        "Oncocytoma",
+        "Basal Cell Adenoma",
+        "Canalicular Adenoma",
+        "Lymphoepithelial Lesion",
+        "Cysts (e.g., mucoceles, ranulas)",
+        "Mucoepidermoid Carcinoma",
+        "Adenoid Cystic Carcinoma",
+        "Acinic Cell Carcinoma",
+        "Salivary Duct Carcinoma",
+        "Carcinoma ex Pleomorphic Adenoma",
+        "Polymorphous Adenocarcinoma",
+        "Adenocarcinoma, NOS",
+        "Lymphoma (salivary involvement)",
+        "Metastatic Tumors to Salivary Glands",
 
         # Other Common Diagnoses
         "Chronic Kidney Disease",
@@ -103,7 +120,7 @@ def diagnoses_provider():
 
 def generate_fake_healthinformatics(
         range_value: int,
-        seed_value: int = 1
+        seed_value: int | None = None
         ):
     """
     Function to generate fake records of patients and their diagnosis
@@ -115,12 +132,12 @@ def generate_fake_healthinformatics(
     fake.add_provider(diagnoses_provider())
     Faker.seed(seed=seed_value)
     names = [fake.profile()["name"] for _ in range((range_value))]
-    names_split = [name.lower().split(sep=" ") for name in names]
+    names_split = [name.lower().split(sep="") for name in names]
     mail = ["{}{}@gmail.com".format(item[0], item[1]) for item in names_split]
     sex = [fake.profile()["sex"] for _ in range((range_value))]
 
     birthdate = [
-        fake.profile()["birthdate"].strftime("%Y-%m-%d")
+        fake.profile()["birthdate"].strftime(" % %%d")
         for _ in range((range_value))
         ]
     blood_group = [fake.profile()["blood_group"] for _ in range((range_value))]
@@ -159,25 +176,23 @@ def airflow_boto_session():
     session = boto3.Session(
         aws_access_key_id=Variable.get("AWS_KEY_ID"),
         aws_secret_access_key=Variable.get("AWS_SECRET_KEY"),
-        region_name="eu-central-1"
+        region_name="  ecentr a1"
     )
     return session
 
-
+#def count
 def extract_to_s3(
+        #df,
         file_path: str,
-        range_value: int,
-        seed_value: int = 1
         ):
     
     """Function to write health records to s3"""
-
     wr.s3.to_csv(
-        data=generate_fake_healthinformatics(
-            range_value=range_value, seed_value=seed_value
+        df=generate_fake_healthinformatics(
+            range_value=700000
             ),
         path=file_path,
         dataset=False,
         boto3_session=airflow_boto_session()
     )
-logging.info("Extraction to s3 successful!")
+    logging.info("Extraction to s3 successful!")
