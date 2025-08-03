@@ -107,6 +107,7 @@ def diagnoses():
         "Psoriasis",
         "Eczema (Atopic Dermatitis)"
     ]
+
     return gender_neutral_diagnoses
 
 
@@ -132,7 +133,7 @@ def generate_fake_healthinformatics(
     fake.add_provider(diagnoses_provider())
     Faker.seed(seed=seed_value)
     names = [fake.profile()["name"] for _ in range((range_value))]
-    names_split = [name.lower().split(sep="") for name in names]
+    names_split = [name.lower().split(sep=" ") for name in names]
     mail = ["{}{}@gmail.com".format(item[0], item[1]) for item in names_split]
     sex = [fake.profile()["sex"] for _ in range((range_value))]
 
@@ -176,23 +177,25 @@ def airflow_boto_session():
     session = boto3.Session(
         aws_access_key_id=Variable.get("AWS_KEY_ID"),
         aws_secret_access_key=Variable.get("AWS_SECRET_KEY"),
-        region_name="  ecentr a1"
+        region_name="eu-central-1"
     )
     return session
 
 #def count
 def extract_to_s3(
-        #df,
-        file_path: str,
+        range_value: int,
+        bucket: str,
+        key: str
         ):
     
     """Function to write health records to s3"""
     wr.s3.to_csv(
         df=generate_fake_healthinformatics(
-            range_value=700000
+            range_value=range_value
             ),
-        path=file_path,
+        path="{}{}".format(bucket, key),
         dataset=False,
         boto3_session=airflow_boto_session()
     )
-    logging.info("Extraction to s3 successful!")
+    logging.info("{} load to s3 successful!".format(key))
+    return key
