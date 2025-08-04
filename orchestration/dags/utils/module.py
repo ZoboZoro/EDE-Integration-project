@@ -106,6 +106,7 @@ def diagnoses():
         "Allergic Rhinitis (Hay Fever)",
         "Psoriasis",
         "Eczema (Atopic Dermatitis)"
+        "Gallbladder hydrops"
     ]
 
     return gender_neutral_diagnoses
@@ -181,14 +182,16 @@ def airflow_boto_session():
     )
     return session
 
-#def count
+#  def count
+
+
 def extract_to_s3(
         range_value: int,
         bucket: str,
         key: str,
         **kwargs
         ):
-    
+
     """Function to write health records to s3"""
 
     s3_path = "{}{}".format(bucket, key)
