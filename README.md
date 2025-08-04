@@ -54,9 +54,9 @@ The entire infrastructure is fully managed via **Terraform**, ensuring reproduci
 - **IAM roles and policies**
 
 ### ⏱️ Redshift Lifecycle Features
-- **Pause** at `16:30`
-- **Resume** at `10:30`
-- **Resize** to match performance demand at `15:30`
+- **Pause** at `16:30 UTC`
+- **Resume** at `10:30 UTC`
+- **Resize** to match performance demand at `15:30 UTC`
 
 <!-- ## 👤 Author
 #### Taofeecoh Adesanu
