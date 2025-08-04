@@ -50,6 +50,15 @@ resource "aws_iam_policy" "redshift_s3_access_policy" {
       {
         Effect = "Allow"
         Action = [
+          "s3:ListAllMyBuckets"
+        ]
+        Resource = [
+          "*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "s3:*"
         ]
         Resource = [
