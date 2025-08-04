@@ -159,7 +159,7 @@ def generate_fake_healthinformatics(
         "blood_group": blood_group,
         "ssn": ssn,
         "mail": mail,
-        "job": job,
+        "jobs": job,
         "address": address,
         "residence": residence,
         "diagnosis": diagnosis
@@ -185,17 +185,21 @@ def airflow_boto_session():
 def extract_to_s3(
         range_value: int,
         bucket: str,
-        key: str
+        key: str,
+        **kwargs
         ):
     
     """Function to write health records to s3"""
+
+    s3_path = "{}{}".format(bucket, key)
     wr.s3.to_csv(
         df=generate_fake_healthinformatics(
             range_value=range_value
             ),
-        path="{}{}".format(bucket, key),
+        path=s3_path,
         dataset=False,
         boto3_session=airflow_boto_session()
     )
     logging.info("{} load to s3 successful!".format(key))
-    return key
+    kwargs["ti"].xcom_push("key", s3_path)
+    return s3_path
