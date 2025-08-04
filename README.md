@@ -27,7 +27,7 @@ Each dataset is processed and routed through different transformation and loadin
 | Programming | Python |
 
 ---
-![alt text](dag.png)
+<!-- ![alt text](dag.png) -->
 ![vpc](assets/vpc.png)
 ![alt text](assets/cluster_queryeditor.png)
 ## 🔄 Data Flow Summary
