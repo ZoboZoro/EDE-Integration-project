@@ -22,40 +22,11 @@ resource "aws_redshift_cluster" "multisource_db" {
   number_of_nodes           = 2
   vpc_security_group_ids    = [aws_security_group.sg1.id]
   cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
-  iam_roles = []
-  master_password = aws_ssm_parameter.redshiftpass.value
+  iam_roles                 = []
+  master_password           = aws_ssm_parameter.redshiftpass.value
 
   tags = local.common_tags
 }
-
-
-# resource "aws_iam_policy" "policy_one" {
-#   name = "policy-one"
-
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action   = ["s3:*"]
-#         Effect   = "Allow"
-#         Resource = ["arn:aws:s3:::general-dumpss/*"]
-#       },
-#     ]
-#   })
-# }
-
-# resource "aws_iam_policy_attachment" "attach_policy" {
-#   name       = "attach_policy_one_to_redshift_role"
-#   roles      = [aws_iam_role.cluster_s3_role.name]
-#   policy_arn = aws_iam_policy.policy_one.arn
-# }
-
-# resource "aws_redshift_cluster_iam_roles" "cluster_iam_role" {
-#   cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
-#   iam_role_arns      = [aws_iam_role.cluster_s3_role.arn]
-# }
-
-
 
 # RDS provision
 resource "random_password" "rdsmastersecret" {
@@ -71,15 +42,15 @@ resource "aws_ssm_parameter" "rdssecret" {
 }
 
 resource "aws_db_instance" "rds" {
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  engine               = "postgres"
-  engine_version       = "17.4"
-  identifier           = "production-postgres1"
-  instance_class       = "db.t4g.micro"
-  db_name              = "production4wdhealthdb"
-  username             = var.db_username
-  password             = aws_ssm_parameter.rdssecret.value
+  allocated_storage = 20
+  storage_type      = "gp2"
+  engine            = "postgres"
+  engine_version    = "17.4"
+  identifier        = "production-postgres1"
+  instance_class    = "db.t4g.micro"
+  db_name           = "production4wdhealthdb"
+  username          = var.db_username
+  password          = aws_ssm_parameter.rdssecret.value
   # port                 = 5439
   #db_subnet_group_name = aws_db_subnet_group.sunbet_g1.id
   parameter_group_name = "default.postgres17"
