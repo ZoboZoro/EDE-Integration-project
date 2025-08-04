@@ -12,49 +12,22 @@ resource "aws_ssm_parameter" "redshiftpass" {
 }
 
 
-# resource "aws_redshift_cluster" "multisource_db" {
-#   cluster_identifier        = "tf-multisource-warehouse"
-#   database_name             = "prod_4wdhealth"
-#   master_username           = var.master_username
-#   node_type                 = "ra3.large"
-#   cluster_type              = "multi-node"
-#   publicly_accessible       = "true"
-#   number_of_nodes           = 2
-#   encrypted                 = true
-#   enhanced_vpc_routing      = true
-#   vpc_security_group_ids    = [aws_security_group.sg1.id]
-#   cluster_subnet_group_name = aws_subnet.public_subnet1.arn
-#   #  parameter_group_name = 
+resource "aws_redshift_cluster" "multisource_db" {
+  cluster_identifier        = "tf-multisource-warehouse"
+  database_name             = "prod_4wdhealth"
+  master_username           = var.master_username
+  node_type                 = "ra3.large"
+  cluster_type              = "multi-node"
+  publicly_accessible       = true
+  number_of_nodes           = 2
+  vpc_security_group_ids    = [aws_security_group.sg1.id]
+  cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
+  iam_roles = []
+  master_password = aws_ssm_parameter.redshiftpass.value
 
-#   master_password = aws_ssm_parameter.redshiftpass.value
+  tags = local.common_tags
+}
 
-#   tags = local.common_tags
-# }
-
-# IAM role
-# resource "aws_iam_role" "cluster_s3_role" {
-#   name = "cluster_s3_role"
-
-#   # Terraform's "jsonencode" function converts a
-#   # Terraform expression result to valid JSON syntax.
-
-
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole"
-#         Effect = "Allow"
-#         Sid    = ""
-#         Principal = {
-#           Service = "redshift.amazonaws.com"
-#         }
-#       },
-#     ]
-#   })
-
-#   tags = local.common_tags
-# }
 
 # resource "aws_iam_policy" "policy_one" {
 #   name = "policy-one"
@@ -81,8 +54,6 @@ resource "aws_ssm_parameter" "redshiftpass" {
 #   cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
 #   iam_role_arns      = [aws_iam_role.cluster_s3_role.arn]
 # }
-
-
 
 
 
