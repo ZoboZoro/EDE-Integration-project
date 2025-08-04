@@ -27,13 +27,11 @@ resource "aws_vpc_security_group_ingress_rule" "ingress2" {
 resource "aws_vpc_security_group_ingress_rule" "ingress3" {
   security_group_id = aws_security_group.sg1.id
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 5439
-  ip_protocol       = "tcp"
-  to_port           = 5439
+  ip_protocol       = "-1"
 }
 
 resource "aws_vpc_security_group_egress_rule" "egress1" {
   security_group_id = aws_security_group.sg1.id
   cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1" # semantically equivalent to all ports
+  ip_protocol       = "-1"
 }
