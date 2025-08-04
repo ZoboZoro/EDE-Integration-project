@@ -1,43 +1,102 @@
 # Redshift provision
 resource "random_password" "mastersecret" {
-    length           = 16
-    special          = true
-    override_special = "!#$%&*()-_=+[]{}<>:?"
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "aws_ssm_parameter" "secret" {
-    name  = "production/redshift/secret/master"
-    type  = "SecureString"
-    value = random_password.mastersecret.result
+resource "aws_ssm_parameter" "redshiftpass" {
+  name  = "/production/redshift/secret/master"
+  type  = "SecureString"
+  value = random_password.mastersecret.result
 }
 
 
-resource "aws_redshift_cluster" "multisource_db" {
-  cluster_identifier = "tf-multisource-warehouse"
-  database_name      = "production_4wdhealth_warehouse"
-  master_username    = var.master_username
-  node_type          = "dc1.large"
-  cluster_type       = "multi-node"
-  vpc_security_group_ids =  [aws_security_group.sg1.id]
-  cluster_subnet_group_name = aws_subnet.public_subnet1.arn
+# resource "aws_redshift_cluster" "multisource_db" {
+#   cluster_identifier        = "tf-multisource-warehouse"
+#   database_name             = "prod_4wdhealth"
+#   master_username           = var.master_username
+#   node_type                 = "ra3.large"
+#   cluster_type              = "multi-node"
+#   publicly_accessible       = "true"
+#   number_of_nodes           = 2
+#   encrypted                 = true
+#   enhanced_vpc_routing      = true
+#   vpc_security_group_ids    = [aws_security_group.sg1.id]
+#   cluster_subnet_group_name = aws_subnet.public_subnet1.arn
+#   #  parameter_group_name = 
 
-  master_password = aws_ssm_parameter.secret.value
+#   master_password = aws_ssm_parameter.redshiftpass.value
 
-  tags = local.common_tags
-}
+#   tags = local.common_tags
+# }
+
+# IAM role
+# resource "aws_iam_role" "cluster_s3_role" {
+#   name = "cluster_s3_role"
+
+#   # Terraform's "jsonencode" function converts a
+#   # Terraform expression result to valid JSON syntax.
+
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Sid    = ""
+#         Principal = {
+#           Service = "redshift.amazonaws.com"
+#         }
+#       },
+#     ]
+#   })
+
+#   tags = local.common_tags
+# }
+
+# resource "aws_iam_policy" "policy_one" {
+#   name = "policy-one"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action   = ["s3:*"]
+#         Effect   = "Allow"
+#         Resource = ["arn:aws:s3:::general-dumpss/*"]
+#       },
+#     ]
+#   })
+# }
+
+# resource "aws_iam_policy_attachment" "attach_policy" {
+#   name       = "attach_policy_one_to_redshift_role"
+#   roles      = [aws_iam_role.cluster_s3_role.name]
+#   policy_arn = aws_iam_policy.policy_one.arn
+# }
+
+# resource "aws_redshift_cluster_iam_roles" "cluster_iam_role" {
+#   cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
+#   iam_role_arns      = [aws_iam_role.cluster_s3_role.arn]
+# }
+
+
+
 
 
 # RDS provision
 resource "random_password" "rdsmastersecret" {
-    length           = 16
-    special          = true
-    override_special = "!#$%&*()-_=+[]{}<>:?"
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "aws_ssm_parameter" "rdssecret" {
-    name  = "production/rds/secret/master"
-    type  = "SecureString"
-    value = random_password.rdsmastersecret.result
+  name  = "/production/rds/secret/master"
+  type  = "SecureString"
+  value = random_password.rdsmastersecret.result
 }
 
 resource "aws_db_instance" "rds" {
@@ -47,13 +106,13 @@ resource "aws_db_instance" "rds" {
   engine_version       = "17.4"
   identifier           = "production-postgres1"
   instance_class       = "db.t4g.micro"
-  db_name              = "production/4wdhealthdb"
+  db_name              = "production4wdhealthdb"
   username             = var.db_username
   password             = aws_ssm_parameter.rdssecret.value
-  port = 5437
-  db_subnet_group_name = aws_db_subnet_group.sunbet_g1.id
+  # port                 = 5439
+  #db_subnet_group_name = aws_db_subnet_group.sunbet_g1.id
   parameter_group_name = "default.postgres17"
-  publicly_accessible = true
+  publicly_accessible  = true
 
   tags = local.common_tags
 }
