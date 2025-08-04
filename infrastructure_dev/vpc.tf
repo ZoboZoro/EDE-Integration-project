@@ -16,10 +16,10 @@ resource "aws_internet_gateway" "multisource_gw" {
   tags = local.common_tags
 }
 
-resource "aws_internet_gateway_attachment" "multisource_gw_attachment" {
-  internet_gateway_id = aws_internet_gateway.multisource_gw.id
-  vpc_id              = aws_vpc.multisource_vpc.id
-}
+# resource "aws_internet_gateway_attachment" "multisource_gw_attachment" {
+#   internet_gateway_id = aws_internet_gateway.multisource_gw.id
+#   vpc_id              = aws_vpc.multisource_vpc.id
+# }
 
 
 # Create Subnets
@@ -53,11 +53,11 @@ resource "aws_route" "multisource_route_toInternetgw" {
   gateway_id             = aws_internet_gateway.multisource_gw.id
 }
 
-resource "aws_route" "multisource_route_toNatgw" {
-  route_table_id         = aws_route_table.multisource_rtb.id
-  destination_cidr_block = "98.16.1.0/24"
-  gateway_id             = aws_internet_gateway.multisource_gw.id
-}
+# resource "aws_route" "multisource_route_toNatgw" {
+#   route_table_id         = aws_route_table.multisource_rtb.id
+#   destination_cidr_block = "98.16.1.0/24"
+#   gateway_id             = aws_internet_gateway.multisource_gw.id
+# }
 
 
 # Associate route table
@@ -68,11 +68,9 @@ resource "aws_route_table_association" "multisource_rtb" {
 
 
 # Subnet group
-resource "aws_db_subnet_group" "sunbet_g1" {
-  name       = "db_subnetgroup1"
-  subnet_ids =  [aws_subnet.public_subnet1.id, aws_subnet.private_subnet1.id]
+# resource "aws_db_subnet_group" "subnet_g1" {
+#   name       = "db_subnetgroup1"
+#   subnet_ids = [aws_subnet.public_subnet1.id, aws_subnet.private_subnet1.id]
 
-  tags = {
-    Name = "db_subnetgroup1"
-  }
-}
+#   tags =merge({Name = "db_subnetgroup1"}, local.common_tags)
+# }
