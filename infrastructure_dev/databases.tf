@@ -22,37 +22,53 @@ resource "aws_redshift_cluster" "multisource_db" {
   number_of_nodes           = 2
   vpc_security_group_ids    = [aws_security_group.sg1.id]
   cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
-  # iam_roles                 = [aws_iam_role.s3_role., aws_iam_role.schedule_role]
   master_password           = aws_ssm_parameter.redshiftpass.value
 
   tags = local.common_tags
 }
 
-resource "aws_redshift_scheduled_action" "pause_action" {
+# Attach roles to cluster
+resource "aws_redshift_cluster_iam_roles" "cluster_iam_role" {
+  cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
+  iam_role_arns      = [aws_iam_role.s3_role.arn, aws_iam_role.schedule_role.arn]
+}
+
+# resource "aws_redshift_parameter_group" "parameter_group1" {
+#   name   = "parameter-group1-terraform" #"default.redshift-2.0"
+#   family = "redshift-2.0"
+
+#   parameter {
+#     name  = "require_ssl"
+#     value = "false"
+#   }
+# }
+
+
+resource "aws_redshift_scheduled_action" "pause" {
   name     = "tf-redshift-scheduled-action-pause"
   schedule = "cron(30 16 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
   target_action {
     pause_cluster {
       cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
-      }
+    }
   }
 }
 
-resource "aws_redshift_scheduled_action" "resume_action" {
-  name     = "tf-redshift-scheduled-action-pause"
+resource "aws_redshift_scheduled_action" "resume" {
+  name     = "tf-redshift-scheduled-action-resume"
   schedule = "cron(30 10 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
   target_action {
-    pause_cluster {
+    resume_cluster {
       cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
-      }
+    }
   }
 }
 
-resource "aws_redshift_scheduled_action" "resize_action" {
-  name     = "tf-redshift-scheduled-action"
-  schedule = "cron(00 23 * * ? *)"
+resource "aws_redshift_scheduled_action" "resize" {
+  name     = "tf-redshift-scheduled-action-resize"
+  schedule = "cron(00 15 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
 
   target_action {
