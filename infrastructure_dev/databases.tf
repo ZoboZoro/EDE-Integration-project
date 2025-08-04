@@ -22,11 +22,49 @@ resource "aws_redshift_cluster" "multisource_db" {
   number_of_nodes           = 2
   vpc_security_group_ids    = [aws_security_group.sg1.id]
   cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
-  iam_roles                 = []
+  # iam_roles                 = [aws_iam_role.s3_role., aws_iam_role.schedule_role]
   master_password           = aws_ssm_parameter.redshiftpass.value
 
   tags = local.common_tags
 }
+
+resource "aws_redshift_scheduled_action" "pause_action" {
+  name     = "tf-redshift-scheduled-action-pause"
+  schedule = "cron(30 16 * * ? *)"
+  iam_role = aws_iam_role.schedule_role.arn
+  target_action {
+    pause_cluster {
+      cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
+      }
+  }
+}
+
+resource "aws_redshift_scheduled_action" "resume_action" {
+  name     = "tf-redshift-scheduled-action-pause"
+  schedule = "cron(30 10 * * ? *)"
+  iam_role = aws_iam_role.schedule_role.arn
+  target_action {
+    pause_cluster {
+      cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
+      }
+  }
+}
+
+resource "aws_redshift_scheduled_action" "resize_action" {
+  name     = "tf-redshift-scheduled-action"
+  schedule = "cron(00 23 * * ? *)"
+  iam_role = aws_iam_role.schedule_role.arn
+
+  target_action {
+    resize_cluster {
+      cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
+      cluster_type       = "multi-node"
+      node_type          = "dc1.large"
+      number_of_nodes    = 1
+    }
+  }
+}
+
 
 # RDS provision
 resource "random_password" "rdsmastersecret" {
