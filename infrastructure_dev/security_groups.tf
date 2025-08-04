@@ -17,11 +17,19 @@ resource "aws_vpc_security_group_ingress_rule" "ingress1" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ingress2" {
-  security_group_id = "0.0.0.0/0" #aws_security_group.sg1.id
+  security_group_id = aws_security_group.sg1.id
   cidr_ipv4         = aws_vpc.multisource_vpc.cidr_block
   from_port         = 22
   ip_protocol       = "tcp"
   to_port           = 22
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ingress3" {
+  security_group_id = aws_security_group.sg1.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 5439
+  ip_protocol       = "tcp"
+  to_port           = 5439
 }
 
 resource "aws_vpc_security_group_egress_rule" "egress1" {
