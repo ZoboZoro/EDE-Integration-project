@@ -1,14 +1,9 @@
 resource "aws_s3_bucket" "main" {
-  bucket = "general-dumpss"
+  bucket        = "general-dumpss"
   force_destroy = true
 
-  tags = merge({Name = "general-dumpss"}, local.common_tags)
-    
-}
+  tags = merge({ Name = "general-dumpss" }, local.common_tags)
 
-resource "aws_s3_bucket_acl" "main" {
-  bucket = aws_s3_bucket.main.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "main_versioning" {
