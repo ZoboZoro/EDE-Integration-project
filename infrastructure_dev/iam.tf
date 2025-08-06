@@ -62,6 +62,7 @@ resource "aws_iam_policy" "redshift_s3_access_policy" {
           "s3:*"
         ]
         Resource = [
+          "arn:aws:s3:::general-dumpss",
           "arn:aws:s3:::general-dumpss/*"
         ]
       },
