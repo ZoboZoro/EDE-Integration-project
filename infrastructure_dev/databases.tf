@@ -23,6 +23,7 @@ resource "aws_redshift_cluster" "multisource_db" {
   vpc_security_group_ids    = [aws_security_group.sg1.id]
   cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
   master_password           = aws_ssm_parameter.redshiftpass.value
+  skip_final_snapshot = false
 
   tags = local.common_tags
 }
@@ -46,7 +47,7 @@ resource "aws_redshift_cluster_iam_roles" "cluster_iam_role" {
 
 resource "aws_redshift_scheduled_action" "pause" {
   name     = "tf-redshift-scheduled-action-pause"
-  schedule = "cron(30 16 * * ? *)"
+  schedule = "cron(55 17 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
   target_action {
     pause_cluster {
@@ -105,8 +106,7 @@ resource "aws_db_instance" "rds" {
   db_name           = "production4wdhealthdb"
   username          = var.db_username
   password          = aws_ssm_parameter.rdssecret.value
-  # port                 = 5439
-  #db_subnet_group_name = aws_db_subnet_group.sunbet_g1.id
+  db_subnet_group_name = aws_db_subnet_group.db_subnetgroup.name
   parameter_group_name = "default.postgres17"
   publicly_accessible  = true
 
