@@ -3,6 +3,7 @@ import logging
 import awswrangler as wr
 import boto3
 import pandas as pd
+from datetime import date, datetime
 from airflow.models import Variable
 from dotenv import load_dotenv
 from faker import Faker
@@ -139,7 +140,8 @@ def generate_fake_healthinformatics(
     sex = [fake.profile()["sex"] for _ in range((range_value))]
 
     birthdate = [
-        fake.profile()["birthdate"].strftime(" % %%d")
+        datetime.strptime(str(fake.profile()["birthdate"]), "%Y-%m-%d")
+        #fake.profile()["birthdate"].strftime("%Y-%m-%d")
         for _ in range((range_value))
         ]
     blood_group = [fake.profile()["blood_group"] for _ in range((range_value))]
@@ -185,7 +187,7 @@ def airflow_boto_session():
 #  def count
 
 
-def extract_to_s3(
+def faker_to_s3(
         range_value: int,
         bucket: str,
         key: str,
@@ -195,14 +197,77 @@ def extract_to_s3(
     """Function to write health records to s3"""
 
     s3_path = "{}{}".format(bucket, key)
-    wr.s3.to_csv(
+    wr.s3.to_parquet(
         df=generate_fake_healthinformatics(
             range_value=range_value
             ),
+        index=False,
         path=s3_path,
         dataset=False,
         boto3_session=airflow_boto_session()
     )
     logging.info("{} load to s3 successful!".format(key))
-    kwargs["ti"].xcom_push("key", s3_path)
-    return s3_path
+    kwargs["ti"].xcom_push("key", key)
+
+
+def replace_with_underscore(x: str):
+    """
+    Function to strip and replace whitespaces between words with _score
+    :param x: a string (required)
+    :returns: formatted string with underscore(s) in lowercase
+    """
+    x = x.strip()
+    return x.replace(" ", "_").lower()
+
+
+def to_snakecase(data_list: list):
+    """
+    Function to transform list items to snake_case
+    :param data_list: takes a list (required)
+    :returns: list of items in snake_case
+    """
+    col = [replace_with_underscore(i) for i in data_list]
+    return col
+
+
+def googlesheet_to_s3(
+        client, 
+        spreadsheet_name, 
+        file_path,
+        **kwargs
+        ):
+    
+    """
+    Function to connect to google drive API and extract data
+    :params client: instance of connection to googlesheet API
+    :params spreadsheet_name: the target spreadsheet.
+    :params file_path: 
+        Amazon s3 path to write file to e.g("s3://bucket_name/directory/filename.extension")
+    :returns: success message when ingestion is complete
+    """
+    try:
+        spreadsheet = client.open(spreadsheet_name)
+        if spreadsheet:
+            logging.info("spreadsheet found...")
+            worksheet = spreadsheet.sheet1.get_all_records()
+            data = pd.DataFrame(worksheet)
+            logging.info("ingested successfully!:")
+            columns_list = data.columns.to_list()
+
+            # used to_snakecase to transform columns
+            columns_list = to_snakecase(columns_list)
+            data.columns = columns_list
+            logging.info("Column names updated successfully!")
+            wr.s3.to_parquet(
+                df=data,
+                index=False,
+                path=file_path,
+                dataset=False,
+                boto3_session=airflow_boto_session()
+            )
+            logging.info("upload to s3 complete!")
+            kwargs["ti"].xcom_push("key", file_path)
+        else:
+            logging.info("spreadsheet does not exist!")
+    except Exception as e:
+        logging.info(e)
