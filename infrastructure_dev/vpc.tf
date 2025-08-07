@@ -19,8 +19,8 @@ resource "aws_internet_gateway" "multisource_gw" {
 
 # Subnet
 resource "aws_subnet" "public_subnet1" {
-  vpc_id     = aws_vpc.multisource_vpc.id
-  cidr_block = "98.16.0.0/24"
+  vpc_id            = aws_vpc.multisource_vpc.id
+  cidr_block        = "98.16.0.0/24"
   availability_zone = "eu-central-1b"
 
   tags = merge({ Name = "public_subnet1" }, local.common_tags)
@@ -28,8 +28,8 @@ resource "aws_subnet" "public_subnet1" {
 }
 
 resource "aws_subnet" "public_subnet2" {
-  vpc_id     = aws_vpc.multisource_vpc.id
-  cidr_block = "98.16.1.0/24"
+  vpc_id            = aws_vpc.multisource_vpc.id
+  cidr_block        = "98.16.1.0/24"
   availability_zone = "eu-central-1a"
 
   tags = merge({ Name = "public_subnet2" }, local.common_tags)
@@ -65,8 +65,8 @@ resource "aws_redshift_subnet_group" "subnet_group" {
 }
 
 resource "aws_db_subnet_group" "db_subnetgroup" {
-  name = "db-subnet-group"
-  subnet_ids  = [aws_subnet.public_subnet1.id, aws_subnet.public_subnet2.id]
+  name       = "db-subnet-group"
+  subnet_ids = [aws_subnet.public_subnet1.id, aws_subnet.public_subnet2.id]
 
   tags = merge({ Name = "db-subnet-group" }, local.common_tags)
 
