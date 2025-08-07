@@ -9,9 +9,8 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.transfers.s3_to_redshift import \
     S3ToRedshiftOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from utils.module import faker_to_s3, googlesheet_to_s3
-
 from dag_tasks import airflow_variables
+from utils.module import faker_to_s3, googlesheet_to_s3
 
 airflow_variables = airflow_variables
 
@@ -79,7 +78,6 @@ with DAG(
             "spreadsheet_name": spreadsheet_source,
             "file_path": filepath2
         }
-
     )
 
 
@@ -90,54 +88,31 @@ create_table = SQLExecuteQueryOperator(
     )
 
 
-# copy_to_redshift = SQLExecuteQueryOperator(
-#         task_id='transfer_s3_to_redshift',
-#         conn_id='redshift_default',
-#         sql="""
-#                 COPY prod_4wdhealth.public.healthinfo
-#                 FROM '{{ ti.xcom_pull(task_ids="extract_to_s3", key="key") }}'
-#                 IAM_ROLE 'arn:aws:iam::517819573047:role/redshift_s3_role'
-#                 ;
-#             """,
-#     )
-
-
 copy_to_redshift = S3ToRedshiftOperator(
-    task_id='copy_data_to_redshift',
-    s3_bucket=BUCKET,
-    s3_key="{{task_instance.xcom_pull(task_ids='extract_to_s3', key='key')}}",
-    schema='public',
-    table= REDSHIFT_TABLE,
-    column_list=[
-            "names",
-            "sex ",
-            "birthdate",
-            "blood_group",
-            "ssn",  
-            "mail",
-            "jobs",
-            "address",
-            "residence",  
-            "diagnosis",
-        ],
-    redshift_conn_id='redshift_default',
-    aws_conn_id='aws_default',
-    copy_options=["FORMAT AS PARQUET"],
-)
+        task_id='copy_data_to_redshift',
+        s3_bucket=BUCKET,
+        s3_key=""
+        "{{task_instance.xcom_pull(task_ids='extract_to_s3', key='key')}}"
+        "",
+        schema='public',
+        table=REDSHIFT_TABLE,
+        column_list=[
+                "names",
+                "sex ",
+                "birthdate",
+                "blood_group",
+                "ssn",
+                "mail",
+                "jobs",
+                "address",
+                "residence",
+                "diagnosis",
+            ],
+        redshift_conn_id='redshift_default',
+        aws_conn_id='aws_default',
+        copy_options=["FORMAT AS PARQUET"],
+    )
 
-
-#     to_redshift = S3ToRedshiftOperator(
-#         task_id='transfer_s3_to_redshift',
-#         aws_conn_id="aws_default",
-#         redshift_conn_id="redshift_default",
-#         s3_bucket=BUCKET,
-#         s3_key="{{ task_instance.xcom_pull(task_ids='extract_to_s3') }}",
-#         schema="public",
-#         table=REDSHIFT_TABLE,
-#         copy_options=["parquet",
-#                      # f"IAM_ROLE '{IAM_ROLE_ARN}'"
-#                       ],
-# )
 
 end = EmptyOperator(task_id='end')
 
