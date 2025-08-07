@@ -1,36 +1,44 @@
 import time
 from datetime import datetime, timedelta
 
-from airflow.models import DAG, Variable
-from airflow.operators.python import PythonOperator
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow.providers.amazon.aws.transfers.s3_to_redshift import S3ToRedshiftOperator
-from dag_tasks import airflow_variables
+import gspread
+from airflow.models import Variable
+from airflow.models.dag import DAG
 from airflow.operators.empty import EmptyOperator
-from utils.module import generate_fake_healthinformatics, extract_to_s3
-import awswrangler as wr
-import os
-import boto3
+from airflow.operators.python import PythonOperator
+from airflow.providers.amazon.aws.transfers.s3_to_redshift import \
+    S3ToRedshiftOperator
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from utils.module import faker_to_s3, googlesheet_to_s3
 
+from dag_tasks import airflow_variables
 
 airflow_variables = airflow_variables
 
-BUCKET = "s3://general-dumps"
-REDSHIFT_TABLE = "heathinfo"
-IAM_ROLE_ARN = 'arn:aws:iam::517819573047:role/service-role/AmazonRedshift-CommandsAccessRole-20250801T191224'
+BUCKET = "general-dumpss"
+REDSHIFT_TABLE = "healthinfo"
+IAM_ROLE_ARN = 'arn:aws:iam::517819573047:role/redshift_s3_role'
 
-key = "/healthinfo-records/healthinformatics{}.csv".format(
-    time.strftime("%Y-%m-%d,%H:%M:%S"))
+key = "healthinfo-records/healthinformatics{}.parquet".format(
+    time.strftime("%Y-%m-%d_%H:%M:%S"))
 
-filepath = "{}/healthinfo-records/healthinformatics{}.csv".format(
-    BUCKET, time.strftime("%Y-%m-%d,%H:%M:%S"))
+filepath = "{}/healthinfo-records/healthinformatics{}.parquet".format(
+    BUCKET, time.strftime("%Y-%m-%d_%H:%M:%S"))
+
+filepath2 = "{}/healthinfo-gsheet/healthinformatics{}.parquet".format(
+    BUCKET, time.strftime("%Y-%m-%d_%H:%M:%S"))
+
+client = gspread.service_account_from_dict(
+        Variable.get("CREDENTIALS_AIRFLOW_GSERVICE", deserialize_json=True)
+    )
+spreadsheet_source = "ptt_records"
+
 
 copy_command = f"""
 COPY public.{REDSHIFT_TABLE}
 FROM '{filepath}'
 IAM_ROLE '{IAM_ROLE_ARN}'
-FORMAT AS CSV
-IGNOREHEADER 1;
+FORMAT AS PARQUET;
 """
 
 
@@ -48,42 +56,76 @@ with DAG(
     schedule_interval='0 5 * * *',
     catchup=False
 ) as dag:
-    
+
     start = EmptyOperator(task_id='start')
-    end = EmptyOperator(task_id='end')
 
     to_s3 = PythonOperator(
         task_id='extract_to_s3',
         provide_context=True,
-        python_callable=extract_to_s3,
+        python_callable=faker_to_s3,
         op_kwargs={
             "range_value": 10,
-            "bucket": BUCKET,
+            "bucket": f's3://{BUCKET}/',
             "key": key
                    },
-)
+    )
+
+    drive_to_s3 = PythonOperator(
+        task_id='drive_to_s3',
+        provide_context=True,
+        python_callable=googlesheet_to_s3,
+        op_kwargs={
+            "client": client,
+            "spreadsheet_name": spreadsheet_source,
+            "file_path": filepath2
+        }
+
+    )
 
 
-    copy_task = SQLExecuteQueryOperator(
-        task_id='copy_task',
+create_table = SQLExecuteQueryOperator(
+        task_id='create_redshift_table',
         conn_id='redshift_default',
-        parameters={
-            "iam_role": IAM_ROLE_ARN
-        },
-        sql="""
-        COPY public.heathinfo
-        FROM '{{ ti.xcom_pull(task_ids="extract_to_s3") }}'
-        IAM_ROLE '{{ parameters.iam_role }}'
-        FORMAT AS CSV;
-        """
+        sql='/sql_table.sql'
+    )
+
+
+# copy_to_redshift = SQLExecuteQueryOperator(
+#         task_id='transfer_s3_to_redshift',
+#         conn_id='redshift_default',
+#         sql="""
+#                 COPY prod_4wdhealth.public.healthinfo
+#                 FROM '{{ ti.xcom_pull(task_ids="extract_to_s3", key="key") }}'
+#                 IAM_ROLE 'arn:aws:iam::517819573047:role/redshift_s3_role'
+#                 ;
+#             """,
+#     )
+
+
+copy_to_redshift = S3ToRedshiftOperator(
+    task_id='copy_data_to_redshift',
+    s3_bucket=BUCKET,
+    s3_key="{{task_instance.xcom_pull(task_ids='extract_to_s3', key='key')}}",
+    schema='public',
+    table= REDSHIFT_TABLE,
+    column_list=[
+            "names",
+            "sex ",
+            "birthdate",
+            "blood_group",
+            "ssn",  
+            "mail",
+            "jobs",
+            "address",
+            "residence",  
+            "diagnosis",
+        ],
+    redshift_conn_id='redshift_default',
+    aws_conn_id='aws_default',
+    copy_options=["FORMAT AS PARQUET"],
 )
-    
-#     load_to_redshift = PostgresOperator(
-#     task_id="load_to_redshift",
-#     postgres_conn_id="redshift_default",
-#     sql=copy_command
-# )
-    
+
+
 #     to_redshift = S3ToRedshiftOperator(
 #         task_id='transfer_s3_to_redshift',
 #         aws_conn_id="aws_default",
@@ -92,10 +134,17 @@ with DAG(
 #         s3_key="{{ task_instance.xcom_pull(task_ids='extract_to_s3') }}",
 #         schema="public",
 #         table=REDSHIFT_TABLE,
-#         copy_options=["csv",
-#                       "IGNOREHEADER 1",
-#                       # f"IAM_ROLE '{IAM_ROLE_ARN}'"
+#         copy_options=["parquet",
+#                      # f"IAM_ROLE '{IAM_ROLE_ARN}'"
 #                       ],
 # )
 
-start >> to_s3 >> copy_task >> end #  to_redshift
+end = EmptyOperator(task_id='end')
+
+(
+    start
+    >> [to_s3, drive_to_s3]
+    >> create_table
+    >> copy_to_redshift
+    >> end
+)
