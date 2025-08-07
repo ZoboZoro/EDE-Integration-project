@@ -23,7 +23,7 @@ resource "aws_redshift_cluster" "multisource_db" {
   vpc_security_group_ids    = [aws_security_group.sg1.id]
   cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
   master_password           = aws_ssm_parameter.redshiftpass.value
-  skip_final_snapshot = false
+  skip_final_snapshot       = false
 
   tags = local.common_tags
 }
@@ -33,16 +33,6 @@ resource "aws_redshift_cluster_iam_roles" "cluster_iam_role" {
   cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
   iam_role_arns      = [aws_iam_role.s3_role.arn, aws_iam_role.schedule_role.arn]
 }
-
-# resource "aws_redshift_parameter_group" "parameter_group1" {
-#   name   = "parameter-group1-terraform" #"default.redshift-2.0"
-#   family = "redshift-2.0"
-
-#   parameter {
-#     name  = "require_ssl"
-#     value = "false"
-#   }
-# }
 
 
 resource "aws_redshift_scheduled_action" "pause" {
@@ -97,15 +87,15 @@ resource "aws_ssm_parameter" "rdssecret" {
 }
 
 resource "aws_db_instance" "rds" {
-  allocated_storage = 20
-  storage_type      = "gp2"
-  engine            = "postgres"
-  engine_version    = "17.4"
-  identifier        = "production-postgres1"
-  instance_class    = "db.t4g.micro"
-  db_name           = "production4wdhealthdb"
-  username          = var.db_username
-  password          = aws_ssm_parameter.rdssecret.value
+  allocated_storage    = 20
+  storage_type         = "gp2"
+  engine               = "postgres"
+  engine_version       = "17.4"
+  identifier           = "production-postgres1"
+  instance_class       = "db.t4g.micro"
+  db_name              = "production4wdhealthdb"
+  username             = var.db_username
+  password             = aws_ssm_parameter.rdssecret.value
   db_subnet_group_name = aws_db_subnet_group.db_subnetgroup.name
   parameter_group_name = "default.postgres17"
   publicly_accessible  = true
