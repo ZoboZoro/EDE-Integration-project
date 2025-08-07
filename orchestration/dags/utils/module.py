@@ -3,7 +3,7 @@ import logging
 import awswrangler as wr
 import boto3
 import pandas as pd
-from datetime import date, datetime
+from datetime import datetime
 from airflow.models import Variable
 from dotenv import load_dotenv
 from faker import Faker
@@ -141,7 +141,7 @@ def generate_fake_healthinformatics(
 
     birthdate = [
         datetime.strptime(str(fake.profile()["birthdate"]), "%Y-%m-%d")
-        #fake.profile()["birthdate"].strftime("%Y-%m-%d")
+        #  fake.profile()["birthdate"].strftime("%Y-%m-%d")
         for _ in range((range_value))
         ]
     blood_group = [fake.profile()["blood_group"] for _ in range((range_value))]
@@ -231,18 +231,19 @@ def to_snakecase(data_list: list):
 
 
 def googlesheet_to_s3(
-        client, 
-        spreadsheet_name, 
+        client,
+        spreadsheet_name,
         file_path,
         **kwargs
         ):
-    
+
     """
     Function to connect to google drive API and extract data
     :params client: instance of connection to googlesheet API
     :params spreadsheet_name: the target spreadsheet.
-    :params file_path: 
-        Amazon s3 path to write file to e.g("s3://bucket_name/directory/filename.extension")
+    :params file_path:
+        Amazon s3 path to write file
+        e.g("s3://bucket_name/directory/filename.extension")
     :returns: success message when ingestion is complete
     """
     try:
