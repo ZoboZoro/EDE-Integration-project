@@ -73,7 +73,7 @@ resource "aws_redshift_scheduled_action" "resize" {
 }
 
 
-# RDS provision
+# RDS
 resource "random_password" "rdsmastersecret" {
   length           = 16
   special          = true
