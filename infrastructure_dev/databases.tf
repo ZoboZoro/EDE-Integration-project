@@ -24,6 +24,21 @@ resource "aws_redshift_cluster" "multisource_db" {
   cluster_subnet_group_name = aws_redshift_subnet_group.subnet_group.name
   master_password           = aws_ssm_parameter.redshiftpass.value
   skip_final_snapshot       = false
+  iam_roles = [aws_iam_role.s3_role, aws_iam_role.schedule_role]
+  cluster_parameter_group_name = aws_redshift_parameter_group.custom.name
+
+  tags = local.common_tags
+}
+
+
+resource "aws_redshift_parameter_group" "custom" {
+  name   = "custom-parameter-group"
+  family = "redshift-2.0"
+
+  parameter {
+    name  = "require_ssl"
+    value = "true"
+  }
 
   tags = local.common_tags
 }
@@ -37,7 +52,7 @@ resource "aws_redshift_cluster_iam_roles" "cluster_iam_role" {
 
 resource "aws_redshift_scheduled_action" "pause" {
   name     = "tf-redshift-scheduled-action-pause"
-  schedule = "cron(55 17 * * ? *)"
+  schedule = "cron(30 15 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
   target_action {
     pause_cluster {
@@ -48,7 +63,7 @@ resource "aws_redshift_scheduled_action" "pause" {
 
 resource "aws_redshift_scheduled_action" "resume" {
   name     = "tf-redshift-scheduled-action-resume"
-  schedule = "cron(30 10 * * ? *)"
+  schedule = "cron(30 00 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
   target_action {
     resume_cluster {
