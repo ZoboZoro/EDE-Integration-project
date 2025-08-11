@@ -23,9 +23,11 @@ resource "aws_redshift_cluster" "multisource_db" {
   vpc_security_group_ids       = [aws_security_group.sg1.id]
   cluster_subnet_group_name    = aws_redshift_subnet_group.subnet_group.name
   master_password              = aws_ssm_parameter.redshiftpass.value
-  skip_final_snapshot          = false
+  skip_final_snapshot          = true
   iam_roles                    = [aws_iam_role.s3_role.arn, aws_iam_role.schedule_role.arn]
   cluster_parameter_group_name = aws_redshift_parameter_group.custom.name
+  apply_immediately            = true
+
 
   tags = local.common_tags
 }
@@ -102,18 +104,22 @@ resource "aws_ssm_parameter" "rdssecret" {
 }
 
 resource "aws_db_instance" "rds" {
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  engine               = "postgres"
-  engine_version       = "17.4"
-  identifier           = "production-postgres1"
-  instance_class       = "db.t4g.micro"
-  db_name              = "production4wdhealthdb"
-  username             = var.db_username
-  password             = aws_ssm_parameter.rdssecret.value
-  db_subnet_group_name = aws_db_subnet_group.db_subnetgroup.name
-  parameter_group_name = "default.postgres17"
-  publicly_accessible  = true
+  allocated_storage       = 20
+  storage_type            = "gp2"
+  engine                  = "postgres"
+  engine_version          = "17.4"
+  identifier              = "production-postgres1"
+  instance_class          = "db.t4g.micro"
+  db_name                 = "production4wdhealthdb"
+  username                = var.db_username
+  password                = aws_ssm_parameter.rdssecret.value
+  db_subnet_group_name    = aws_db_subnet_group.db_subnetgroup.name
+  parameter_group_name    = "default.postgres17"
+  publicly_accessible     = true
+  skip_final_snapshot     = true
+  backup_retention_period = 0
+  apply_immediately       = true
+
 
   tags = local.common_tags
 }
