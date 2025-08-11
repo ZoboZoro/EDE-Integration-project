@@ -3,6 +3,6 @@ terraform {
     bucket       = "terraformbackend-infra"
     key          = "ede-multisource-project/development/tf.state"
     region       = "eu-central-1"
-    use_lockfile = true
+    use_lockfile = false
   }
 }
