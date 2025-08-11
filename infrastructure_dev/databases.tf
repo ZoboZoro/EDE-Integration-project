@@ -115,11 +115,11 @@ resource "aws_db_instance" "rds" {
   password                = aws_ssm_parameter.rdssecret.value
   db_subnet_group_name    = aws_db_subnet_group.db_subnetgroup.name
   parameter_group_name    = "default.postgres17"
+  vpc_security_group_ids = [aws_security_group.sg1.id]
   publicly_accessible     = true
   skip_final_snapshot     = true
   backup_retention_period = 0
   apply_immediately       = true
-
 
   tags = local.common_tags
 }
