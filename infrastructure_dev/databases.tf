@@ -76,14 +76,14 @@ resource "aws_redshift_scheduled_action" "resume" {
 
 resource "aws_redshift_scheduled_action" "resize" {
   name     = "tf-redshift-scheduled-action-resize"
-  schedule = "cron(00 13 * * ? *)"
+  schedule = "cron(30 14 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
 
   target_action {
     resize_cluster {
       cluster_identifier = aws_redshift_cluster.multisource_db.cluster_identifier
-      cluster_type       = "multi-node"
-      node_type          = "dc1.large"
+      cluster_type       = "single-node"
+      node_type          = "ra3.large"
       number_of_nodes    = 1
     }
   }
