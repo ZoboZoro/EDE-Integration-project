@@ -57,10 +57,15 @@ The entire infrastructure is fully managed via **Terraform**, ensuring reproduci
 - **Airflow & Airbyte deployment scaffolds**
 - **IAM roles and policies**
 
-### ⏱️ Redshift Lifecycle Features
-- **Pause** at `16:30 UTC`
-- **Resume** at `10:30 UTC`
-- **Resize** to match performance demand at `15:30 UTC`
+## 🏢 Enterprise-Grade Features
+
+- **High Reliability**: Automated retries, error handling, and alert hooks in Airflow DAGs
+- **Performance Optimization**: Redshift lifecycle tuning (pause/resume/resize) to balance cost and speed
+- **Infrastructure Automation**: Terraform scripts ensure reproducible, scalable deployments
+- **Secure Data Handling**: IAM roles with least-privilege policies for service integration
+- **Future-Ready**: Architecture prepared for real-time ingestion via Kafka/Kinesis
+- **Multi-Source Integration**: Supports both real-world (Google Sheets) and synthetic (SimuHealth) datasets
+- **Separation of Concerns**: Staging layers (S3, RDS) before warehousing in Redshift
 
 <!-- ## 👤 Author
 #### Taofeecoh Adesanu
