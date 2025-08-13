@@ -56,6 +56,12 @@ resource "aws_route_table_association" "multisource_rtb" {
   route_table_id = aws_route_table.multisource_rtb.id
 }
 
+resource "aws_route_table_association" "rtb_association2" {
+  subnet_id      = aws_subnet.public_subnet2.id
+  route_table_id = aws_route_table.multisource_rtb.id
+}
+
+
 resource "aws_redshift_subnet_group" "subnet_group" {
   name        = "redshift-cluster-subnet-group"
   description = "My Redshift cluster subnet group"
