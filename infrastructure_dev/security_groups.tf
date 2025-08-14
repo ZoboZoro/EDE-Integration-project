@@ -40,7 +40,7 @@ resource "aws_vpc_security_group_ingress_rule" "ingress4_redshift" {
   to_port           = 5439
 }
 
-# resource "aws_vpc_security_group_ingress_rule" "ingress3" {
+# resource "aws_vpc_security_group_ingress_rule" "ingress5_all" {
 #   security_group_id = aws_security_group.sg1.id
 #   cidr_ipv4         = "0.0.0.0/0"
 #   ip_protocol       = "-1"
