@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import awswrangler as wr
 import boto3
@@ -231,11 +232,11 @@ def to_snakecase(data_list: list):
 
 
 def googlesheet_to_s3(
-        client,
-        spreadsheet_name,
-        file_path,
+        client: Any,
+        spreadsheet_name: str,
+        file_path: str,
         **kwargs
-        ):
+        ) -> pd.DataFrame:
 
     """
     Function to connect to google drive API and extract data
@@ -270,5 +271,31 @@ def googlesheet_to_s3(
             kwargs["ti"].xcom_push("key", file_path)
         else:
             logging.info("spreadsheet does not exist!")
+    except Exception as e:
+        logging.info(e)
+
+
+def load_to_db(dframe: pd.DataFrame,
+         connection: Any,
+         table: str,
+         type_dict: dict | None = None,
+         ) -> None:
+    try:
+        rows = 0
+        logging.info(connection)
+        logging.info(f"Importing {rows} of {rows + len(dframe)} to ")
+        with connection.begin() as conn:
+            dframe.to_sql(
+                name=table,
+                con=conn,
+                schema="public",
+                if_exists='append',
+                index=False,
+                chunksize=1000000,
+                method="multi",
+                dtype=type_dict
+                )
+        rows += (len(dframe))
+        logging.info(f"Imported {rows} successfully")
     except Exception as e:
         logging.info(e)
