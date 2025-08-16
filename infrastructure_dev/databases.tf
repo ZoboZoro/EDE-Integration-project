@@ -1,4 +1,10 @@
 # Redshift provision
+resource "aws_ssm_parameter" "redshift_user" {
+  name  = "/production/redshift/masteruser"
+  type  = "String"
+  value = var.master_username
+}
+
 resource "random_password" "mastersecret" {
   length           = 16
   special          = true
@@ -15,7 +21,7 @@ resource "aws_ssm_parameter" "redshiftpass" {
 resource "aws_redshift_cluster" "multisource_db" {
   cluster_identifier           = "tf-multisource-warehouse"
   database_name                = "prod_4wdhealth"
-  master_username              = var.master_username
+  master_username              = aws_ssm_parameter.redshift_user.value
   node_type                    = "ra3.large"
   cluster_type                 = "multi-node"
   publicly_accessible          = true
@@ -90,6 +96,12 @@ resource "aws_redshift_scheduled_action" "resize" {
 
 
 # RDS
+resource "aws_ssm_parameter" "postgres_user" {
+  name  = "/production/rdspostgres/user"
+  type  = "String"
+  value = var.db_username
+}
+
 resource "random_password" "rdsmastersecret" {
   length           = 16
   special          = true
@@ -110,7 +122,7 @@ resource "aws_db_instance" "rds" {
   identifier              = "production-postgres1"
   instance_class          = "db.t4g.micro"
   db_name                 = "production4wdhealthdb"
-  username                = var.db_username
+  username                = aws_ssm_parameter.postgres_user.value
   password                = aws_ssm_parameter.rdssecret.value
   db_subnet_group_name    = aws_db_subnet_group.db_subnetgroup.name
   parameter_group_name    = "default.postgres17"
