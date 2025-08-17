@@ -3,9 +3,11 @@ from typing import Any
 
 import awswrangler as wr
 import boto3
+import gspread
 import pandas as pd
 from datetime import datetime
 from airflow.models import Variable
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from dotenv import load_dotenv
 from faker import Faker
 from faker.providers import DynamicProvider
@@ -20,7 +22,7 @@ logging.basicConfig(
 load_dotenv()
 
 
-def diagnoses():
+def diagnoses() -> list:
     gender_neutral_diagnoses = [
         # Infectious Diseases
         "Influenza (Flu)",
@@ -125,7 +127,7 @@ def diagnoses_provider():
 def generate_fake_healthinformatics(
         range_value: int,
         seed_value: int | None = None
-        ):
+        ) -> pd.DataFrame:
     """
     Function to generate fake records of patients and their diagnosis
     :params range_value: int, required. Count of iterations
@@ -193,7 +195,7 @@ def faker_to_s3(
         bucket: str,
         key: str,
         **kwargs
-        ):
+        ) -> None:
 
     """Function to write health records to s3"""
 
@@ -299,3 +301,129 @@ def load_to_db(dframe: pd.DataFrame,
         logging.info(f"Imported {rows} successfully")
     except Exception as e:
         logging.info(e)
+
+
+def googlesheet_to_db(
+        client: Any,
+        spreadsheet_name: str,
+        connection: Any,
+        table: str,
+        type_dict: dict | None = None,
+        **kwargs
+        ) -> None:
+
+    """
+    Function to load data from googlesheets to postgres database
+    :params client: instance of connection to googlesheet API
+    :params spreadsheet_name: the target spreadsheet.
+    :params connection: sqlalchemy engine connection
+    :params table: database target table
+    :params type_dict: types of data fields in dictionary
+    :returns: None
+    """
+    try:
+        spreadsheet = client.open(spreadsheet_name)
+        if spreadsheet:
+            logging.info("spreadsheet found...")
+            worksheet = spreadsheet.sheet1.get_all_records()
+            data = pd.DataFrame(worksheet)
+            logging.info("ingested successfully!")
+
+            # used to_snakecase to transform columns
+            columns_list = to_snakecase(data.columns.to_list())
+            data.columns = columns_list
+            data.drop(columns="", axis=1, inplace=True)
+            logging.info("Column names updated successfully!")
+            
+            # Begin connection to database
+            data = data.head(3)
+            rows = 0
+            logging.info(f"Importing {rows} of {rows + len(data)}...")
+            # with connection.begin() as conn:
+            data.to_sql(
+                    name=table,
+                    con=connection,
+                    schema="public",
+                    if_exists='append',
+                    index=False,
+                    chunksize=1000000,
+                    method="multi",
+                    dtype=type_dict
+                    )
+            rows += (len(data))
+            logging.info(f"Imported {rows} successfully!")
+    except Exception as e:
+        logging.info(e)
+
+
+def googlesheet_db_withPGhook(
+        client: Any,
+        spreadsheet_name: str,
+        conn_id: str,
+        table: str,
+        sql: str | None = None,
+        **kwargs
+        ) -> None:
+
+    """
+    Function to load data from googlesheets to postgres database
+    :params client: instance of connection to googlesheet API
+    :params spreadsheet_name: the target spreadsheet.
+    :params conn_id: Postgres connection ID on Airflow UI
+    :params table: database target table
+    :returns: None
+    """
+    try:
+        spreadsheet = client.open(spreadsheet_name)
+        if spreadsheet:
+            logging.info("spreadsheet found...")
+            worksheet = spreadsheet.sheet1.get_all_records()
+            data = pd.DataFrame(worksheet)
+            logging.info("ingested successfully!")
+
+            # used to_snakecase to transform columns
+            columns_list = to_snakecase(data.columns.to_list())
+            data.columns = columns_list
+            data.drop(columns="", axis=1, inplace=True)
+            logging.info("Column names updated successfully!")
+            
+            # Begin connection to database
+            data = data.head(3)
+            hook = PostgresHook(postgres_conn_id=conn_id)
+            rows = [tuple(row) for row in data.to_numpy()]
+            hook.insert_rows(
+                table=table,
+                rows=rows,
+                target_fields=data.columns.to_list(),
+
+            )
+            logging.info(f"Imported {len(rows)} rows successfully!")
+    except Exception as e:
+        logging.info(e)
+
+
+def temp_env():
+    import pandas as pd
+    from sqlalchemy import create_engine, String, DATE
+    
+
+    USER = Variable.get('DB_USER')
+    PG_SECRET = Variable.get('PG_SECRET')
+    DB_HOST= Variable.get('DB_HOST')
+    DB_NAME = Variable.get('DB_NAME')
+    POSTGRES_TABLE = "sub16_healthinfotest"
+    spreadsheet_source = "ptt_records"
+    client = gspread.service_account_from_dict(
+        Variable.get("CREDENTIALS_AIRFLOW_GSERVICE", deserialize_json=True)
+    )
+
+    engine = create_engine(
+      "postgresql+psycopg2://{}:{}@{}/{}".format(USER, PG_SECRET, DB_HOST, DB_NAME)
+    )
+
+    googlesheet_to_db(
+        client=client,
+        connection=engine,
+        spreadsheet_name=spreadsheet_source,
+        table=POSTGRES_TABLE
+    )
