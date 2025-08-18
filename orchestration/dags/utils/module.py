@@ -361,7 +361,6 @@ def googlesheet_db_withPGhook(
         spreadsheet_name: str,
         conn_id: str,
         table: str,
-        sql: str | None = None,
         **kwargs
         ) -> None:
 
@@ -387,43 +386,16 @@ def googlesheet_db_withPGhook(
             data.drop(columns="", axis=1, inplace=True)
             logging.info("Column names updated successfully!")
             
-            # Begin connection to database
-            data = data.head(3)
+            # Begin connection to database and insert data
+            #data = data.head(3)
             hook = PostgresHook(postgres_conn_id=conn_id)
-            rows = [tuple(row) for row in data.to_numpy()]
+            rows = list(data.itertuples(index=False))
             hook.insert_rows(
                 table=table,
                 rows=rows,
                 target_fields=data.columns.to_list(),
-
             )
+
             logging.info(f"Imported {len(rows)} rows successfully!")
     except Exception as e:
         logging.info(e)
-
-
-def temp_env():
-    import pandas as pd
-    from sqlalchemy import create_engine, String, DATE
-    
-
-    USER = Variable.get('DB_USER')
-    PG_SECRET = Variable.get('PG_SECRET')
-    DB_HOST= Variable.get('DB_HOST')
-    DB_NAME = Variable.get('DB_NAME')
-    POSTGRES_TABLE = "sub16_healthinfotest"
-    spreadsheet_source = "ptt_records"
-    client = gspread.service_account_from_dict(
-        Variable.get("CREDENTIALS_AIRFLOW_GSERVICE", deserialize_json=True)
-    )
-
-    engine = create_engine(
-      "postgresql+psycopg2://{}:{}@{}/{}".format(USER, PG_SECRET, DB_HOST, DB_NAME)
-    )
-
-    googlesheet_to_db(
-        client=client,
-        connection=engine,
-        spreadsheet_name=spreadsheet_source,
-        table=POSTGRES_TABLE
-    )
