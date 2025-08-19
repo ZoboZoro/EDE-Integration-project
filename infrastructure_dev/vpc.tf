@@ -22,6 +22,7 @@ resource "aws_subnet" "public_subnet1" {
   vpc_id            = aws_vpc.multisource_vpc.id
   cidr_block        = "98.16.0.0/24"
   availability_zone = "eu-central-1b"
+  map_public_ip_on_launch = true
 
   tags = merge({ Name = "public_subnet1" }, local.common_tags)
 
@@ -31,6 +32,7 @@ resource "aws_subnet" "public_subnet2" {
   vpc_id            = aws_vpc.multisource_vpc.id
   cidr_block        = "98.16.1.0/24"
   availability_zone = "eu-central-1a"
+   map_public_ip_on_launch = true
 
   tags = merge({ Name = "public_subnet2" }, local.common_tags)
 
