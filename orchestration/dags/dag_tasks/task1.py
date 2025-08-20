@@ -1,19 +1,18 @@
 import time
 from datetime import datetime, timedelta
-from typing import Any
 
 import gspread
 from airflow.models import Variable
 from airflow.models.dag import DAG
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator, PythonVirtualenvOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.transfers.s3_to_redshift import \
     S3ToRedshiftOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+from utils.module import (faker_to_s3, googlesheet_db_withPGhook,
+                          googlesheet_to_s3)
+
 from dag_tasks import airflow_variables
-# from sqlalchemy import create_engine, String, DATE
-from utils.module import faker_to_s3, googlesheet_to_s3, googlesheet_to_db, googlesheet_db_withPGhook
 
 airflow_variables = airflow_variables
 
@@ -24,7 +23,7 @@ POSTGRES_TABLE = "reg16_healthinfo"
 IAM_ROLE_ARN = "arn:aws:iam::517819573047:role/redshift_s3_role"
 USER = Variable.get('DB_USER')
 PG_SECRET = Variable.get('PG_SECRET')
-DB_HOST= Variable.get('DB_HOST')
+DB_HOST = Variable.get('DB_HOST')
 DB_NAME = Variable.get('DB_NAME')
 
 key = "healthinfo-records/healthinformatics{}.parquet".format(
@@ -42,7 +41,7 @@ client = gspread.service_account_from_dict(
 
 spreadsheet_source = "ptt_records"
 
-postgres_conn_id="postgres_default"
+postgres_conn_id = "postgres_default"
 
 to_rdsPG_args = {
       "client": client,
@@ -68,19 +67,19 @@ with DAG(
 
     start = EmptyOperator(task_id='start')
 
-    to_s3 = PythonOperator(
+to_s3 = PythonOperator(
         task_id='extract_to_s3',
         provide_context=True,
         python_callable=faker_to_s3,
         op_kwargs={
-            "range_value": 10,
+            "range_value": 7,
             "bucket": f's3://{BUCKET}/',
             "key": key
                    },
     )
 
 
-    drive_to_s3 = PythonOperator(
+drive_to_s3 = PythonOperator(
         task_id='drive_to_s3',
         provide_context=True,
         python_callable=googlesheet_to_s3,
@@ -140,18 +139,8 @@ copy_to_redshift = S3ToRedshiftOperator(
 
 end = EmptyOperator(task_id='end')
 
-# (
-#     start 
-#     >>  to_s3 >> drive_to_s3
-#     << [create_postgres_table, create_redshift_table] 
-#     >> to_postgres << create_postgres_table >>
-#     copy_to_redshift << create_redshift_table
-#     << end
-# )
-
-start >> [to_postgres, copy_to_redshift]
-# start >> drive_to_s3 >> create_postgres_table >> to_postgres
-start >> [drive_to_s3, to_s3] >> create_postgres_table >> to_postgres
-#to_postgres << create_postgres_table << start
-copy_to_redshift << create_redshift_table << start
-
+start >> [
+    drive_to_s3, to_s3, create_redshift_table
+    ] >> copy_to_redshift
+start >> create_postgres_table >> to_postgres
+[to_postgres, copy_to_redshift] >> end
