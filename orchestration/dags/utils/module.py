@@ -1,11 +1,10 @@
 import logging
+from datetime import datetime
 from typing import Any
 
 import awswrangler as wr
 import boto3
-import gspread
 import pandas as pd
-from datetime import datetime
 from airflow.models import Variable
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from dotenv import load_dotenv
@@ -277,11 +276,12 @@ def googlesheet_to_s3(
         logging.info(e)
 
 
-def load_to_db(dframe: pd.DataFrame,
-         connection: Any,
-         table: str,
-         type_dict: dict | None = None,
-         ) -> None:
+def load_to_db(
+        dframe: pd.DataFrame,
+        connection: Any,
+        table: str,
+        type_dict: dict | None = None,
+        ) -> None:
     try:
         rows = 0
         logging.info(connection)
@@ -334,7 +334,7 @@ def googlesheet_to_db(
             data.columns = columns_list
             data.drop(columns="", axis=1, inplace=True)
             logging.info("Column names updated successfully!")
-            
+
             # Begin connection to database
             data = data.head(3)
             rows = 0
@@ -385,9 +385,9 @@ def googlesheet_db_withPGhook(
             data.columns = columns_list
             data.drop(columns="", axis=1, inplace=True)
             logging.info("Column names updated successfully!")
-            
+
             # Begin connection to database and insert data
-            #data = data.head(3)
+            data = data.head(7)
             hook = PostgresHook(postgres_conn_id=conn_id)
             rows = list(data.itertuples(index=False))
             hook.insert_rows(
