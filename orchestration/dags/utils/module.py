@@ -125,7 +125,6 @@ def diagnoses_provider():
 
 def generate_fake_healthinformatics(
         range_value: int,
-        seed_value: int | None = None
         ) -> pd.DataFrame:
     """
     Function to generate fake records of patients and their diagnosis
@@ -135,22 +134,22 @@ def generate_fake_healthinformatics(
 
     fake = Faker()
     fake.add_provider(diagnoses_provider())
-    Faker.seed(seed=seed_value)
-    names = [fake.profile()["name"] for _ in range((range_value))]
+
+    profiles = [fake.profile() for _ in range(range_value)]
+
+    names = [profile["name"] for profile in profiles]
     names_split = [name.lower().split(sep=" ") for name in names]
-    mail = ["{}{}@gmail.com".format(item[0], item[1]) for item in names_split]
-    sex = [fake.profile()["sex"] for _ in range((range_value))]
-
+    mail = ["{}{}@gmail.com".format(item[0],item[1]) for item in names_split]
+    sex = [profile["sex"] for profile in profiles]
     birthdate = [
-        datetime.strptime(str(fake.profile()["birthdate"]), "%Y-%m-%d")
-        #  fake.profile()["birthdate"].strftime("%Y-%m-%d")
-        for _ in range((range_value))
+        datetime.strptime(str(profile["birthdate"]), "%Y-%m-%d")
+        for profile in profiles
         ]
-    blood_group = [fake.profile()["blood_group"] for _ in range((range_value))]
-    ssn = [fake.profile()["ssn"] for _ in range((range_value))]
-    job = [fake.profile()["job"] for _ in range((range_value))]
-    residence = [fake.profile()["residence"] for _ in range((range_value))]
-
+    blood_group = [profile["blood_group"] for profile in profiles]
+    ssn = [profile["ssn"] for profile in profiles]
+    job = [profile["job"] for profile in profiles]
+    residence = [profile["residence"] for profile in profiles]
+    
     address = [
         fake.address().replace("\n", ", ")
         for _ in range((range_value))
@@ -336,7 +335,6 @@ def googlesheet_to_db(
             logging.info("Column names updated successfully!")
 
             # Begin connection to database
-            data = data.head(3)
             rows = 0
             logging.info(f"Importing {rows} of {rows + len(data)}...")
             # with connection.begin() as conn:
@@ -387,13 +385,13 @@ def googlesheet_db_withPGhook(
             logging.info("Column names updated successfully!")
 
             # Begin connection to database and insert data
-            data = data.head(7)
             hook = PostgresHook(postgres_conn_id=conn_id)
             rows = list(data.itertuples(index=False))
             hook.insert_rows(
                 table=table,
                 rows=rows,
                 target_fields=data.columns.to_list(),
+                commit_every=0
             )
 
             logging.info(f"Imported {len(rows)} rows successfully!")
