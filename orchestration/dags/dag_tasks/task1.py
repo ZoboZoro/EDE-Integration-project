@@ -67,12 +67,12 @@ with DAG(
 
     start = EmptyOperator(task_id='start')
 
-to_s3 = PythonOperator(
-        task_id='extract_to_s3',
+fake_to_s3 = PythonOperator(
+        task_id='fake_to_s3',
         provide_context=True,
         python_callable=faker_to_s3,
         op_kwargs={
-            "range_value": 7,
+            "range_value": 500000,
             "bucket": f's3://{BUCKET}/',
             "key": key
                    },
@@ -105,7 +105,7 @@ create_postgres_table = SQLExecuteQueryOperator(
 
 
 to_postgres = PythonOperator(
-        task_id='load_to_postgres',
+        task_id='gsheet_to_postgres',
         provide_context=True,
         python_callable=googlesheet_db_withPGhook,
         op_kwargs=to_rdsPG_args
@@ -140,7 +140,8 @@ copy_to_redshift = S3ToRedshiftOperator(
 end = EmptyOperator(task_id='end')
 
 start >> [
-    drive_to_s3, to_s3, create_redshift_table
+    fake_to_s3, create_redshift_table
     ] >> copy_to_redshift
+start >> drive_to_s3 >> end
 start >> create_postgres_table >> to_postgres
 [to_postgres, copy_to_redshift] >> end
