@@ -29,7 +29,6 @@ Each dataset is processed and routed through different transformation and loadin
 ---
 ![alt text](assets/dag.png)
 ![vpc](assets/vpc.png)
-![alt text](assets/cluster_queryeditor.png)
 <!-- ![alt text](assets/code1.png)
 ![alt text](assets/code2.png) -->
 
