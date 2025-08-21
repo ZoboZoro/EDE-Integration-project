@@ -71,7 +71,7 @@ resource "aws_redshift_scheduled_action" "pause" {
 
 resource "aws_redshift_scheduled_action" "resume" {
   name     = "tf-redshift-scheduled-action-resume"
-  schedule = "cron(00 9 * * ? *)"
+  schedule = "cron(30 4 * * ? *)"
   iam_role = aws_iam_role.schedule_role.arn
   target_action {
     resume_cluster {
