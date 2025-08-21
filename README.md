@@ -1,9 +1,13 @@
-# 4WD HEALTH PROJECT
+# 4WD HEALTH PROJECT :  `daas Global` Health Records Infrastructure 🚑
+🌍 Project Context
 
+`daas Global` is a healthcare facility network committed to providing medical services to underserved regions across Africa. In alignment with SDG-3 (Good Health & Well-being), stakeholders envisioned a centralized health data platform to unify records from facilities operating across multiple countries.
 
-# Multisource Health Records ETL Pipeline 🚑
+The goal is to enable data-driven decision-making by identifying prevalent illnesses in different regions, helping policymakers and partners such as the World Health Organization (WHO) design effective preventive measures and interventions.
 
-This project is a robust and scalable **ETL pipeline** for consolidating patient health records from multiple data sources into a centralized data warehouse (Amazon Redshift). It demonstrates data engineering best practices including orchestration with **Apache Airflow**, integration via **Airbyte**, infrastructure provisioning with **Terraform**, and the use of **AWS** cloud services.
+To support this mission, the project implements a cloud-native data infrastructure that consolidates patient health records from multiple sources into a single, scalable warehouse, ensuring accessibility, reliability, and analytical readiness.
+
+<!-- This project is a robust and scalable **ETL pipeline** for consolidating patient health records from multiple data sources into a centralized data warehouse (Amazon Redshift). It demonstrates data engineering best practices including orchestration with **Apache Airflow**, integration via **Airbyte**, infrastructure provisioning with **Terraform**, and the use of **AWS** cloud services. -->
 
 ## 📌 Project Overview
 
