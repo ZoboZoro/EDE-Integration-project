@@ -34,7 +34,7 @@ Each dataset is processed and routed through different transformation and loadin
 
 ---
 ![alt text](assets/dag1.png)
-![vpc](assets/vpc.png)
+<!-- ![vpc](assets/vpc.png) -->
 
 ## 🔄 Data Flow Summary
 
