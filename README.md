@@ -19,7 +19,7 @@ Each dataset is processed and routed through different transformation and loadin
 
 ---
 
-![alt text](assets/daas_arch2.gif)
+![alt text](assets/daas_arch.gif)
 
 ## 🛠️ Tech Stack
 
